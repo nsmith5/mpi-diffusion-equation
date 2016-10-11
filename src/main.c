@@ -1,33 +1,34 @@
-/*
- * Copyright (c) 2012 Torsten Hoefler. All rights reserved.
- *
- * Author(s): Torsten Hoefler <htor@illinois.edu>
- *
- */
-
 #include <mpi.h>
 #include <hdf5.h>
+#include <fftw3-mpi.h>
 #include <stdio.h>
 #include "state.h"
 
-int main(int argc, char **argv)
+void init (int    argc,
+           char **argv)
 {
-	MPI_Init(&argc, &argv);
+    MPI_Init (&argc, &argv);
+    //fftw_mpi_init ();
+    return;
+}
+
+void finalize (void)
+{
+    //fftw_mpi_cleanup ();
+    MPI_Finalize ();
+    return;
+}
+
+int main (int argc, char **argv)
+{
+    init (argc, argv);
+
 	int r,p;
 	MPI_Comm comm = MPI_COMM_WORLD;
-	MPI_Comm_rank(comm, &r);
-	MPI_Comm_size(comm, &p);
 
-	state* s = state_create(10, 0.1, 0.1, 1.0);
+    state* s = create_state(100, 0.1, 0.2, 1.0);
 
-    s->T[1] = 1.0;
-
-	printf("I'm process %d and my state dx is %f\n", r, s->T[0]);
-
-
-  	MPI_Barrier(comm);
-
-    state_destroy(s);
-
-    MPI_Finalize();
+    destroy_state(s);
+    finalize ();
+    return 0;
 }

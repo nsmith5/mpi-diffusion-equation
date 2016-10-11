@@ -5,12 +5,47 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include "state.h"
 #include "io.h"
 
 #define ind(i,j) (j)*(bx+2)+(i)
 
-void writehdf5(const double *a, int iter, int n, int px, int py, int bx,
-	       int by, int offx, int offy, MPI_Comm comm)
+void write (state* s)
+{
+    MPI_Comm comm = MPI_COMM_WORLD;
+    MPI_Info info = MPI_INFO_NULL;
+
+    hid_t plist_id;             // Property list id
+    hid_t file_id, dset_id;     // File and dataset ids
+    hsize_t dimsf[2];           // Data dimensions
+
+    /*
+     * Set up file access property list with parallel I/O access
+     */
+    plist_id = H5Pcreate(H5P_FILE_ACCESS);
+    H5Pset_fapl_mpio(plist_id, comm, info);
+
+    /*
+     * Create a new file
+     */
+    file_id = H5Fcreate("checkpoint_tmp.h5",
+                        H5F_ACC_TRUNC,
+                        H5P_DEFAULT,
+                        plist_id);
+
+}
+
+
+void writehdf5(const double *a,
+               int           iter,
+               int           n,
+               int           px,
+               int           py,
+               int           bx,
+               int           by,
+               int           offx,
+               int           offy,
+               MPI_Comm      comm)
 {
   hid_t file_id;      // File identifier
   hid_t plist_id;     // File access property list identifier
