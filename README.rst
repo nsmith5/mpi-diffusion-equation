@@ -16,7 +16,7 @@ To install make sure you have an MPI compiler installed as well as FFTW3 and
 HDF5 libraries installed that were compiled with the same compiler. Once this
 is done simply compile with
 
-.. bash::
+.. code:: bash
 	>> make
 
 
