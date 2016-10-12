@@ -9,12 +9,12 @@ void save_state (state* s, char *filename)
     MPI_Comm comm = MPI_COMM_WORLD;
     MPI_Info info = MPI_INFO_NULL;
 
-    hid_t plist_id;             // Property list id
-    hid_t file_id, dset_id;     // File and dataset ids
-    hid_t filespace, memspace;
-    hsize_t dimsf[2];           // Data dimensions
+    hid_t plist_id;             /* Property list id */
+    hid_t file_id, dset_id;     /* File and dataset ids */
+    hid_t filespace, memspace;  /* File and memory ids */
+    hsize_t dimsf[2];           /* Data dimensions */
     hsize_t count[2];           /* Hyperslab stuff*/
-    hsize_t offset[2];
+    hsize_t offset[2];          /* Offset of starting points */
     herr_t status;
 
     /*
@@ -56,7 +56,7 @@ void save_state (state* s, char *filename)
      * hyperslab in the file
      */
 
-    count[0] = s->N/s->local_n0;
+    count[0] = s->local_n0;
     count[1] = s->N;
     offset[0] = s->local_0_start;
     offset[1] = 0;

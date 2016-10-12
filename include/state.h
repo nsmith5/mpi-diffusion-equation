@@ -24,3 +24,7 @@ state* create_state (int    N,
                      double D);
 
 void destroy_state (state* S);
+
+void make_square (state *s, double h);
+
+void make_const (state *s, double h);

@@ -22,6 +22,14 @@ state* create_state (int    N,
                                          &s->local_n0,
                                          &s->local_0_start);
 
+    int rank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    printf("I'm process %d and local_n0 = %d and local_0_start = %d and local allocation is %d\n",
+           rank,
+           s->local_n0,
+           s->local_0_start,
+           local_alloc);
+
     s->T = fftw_alloc_real (2 * local_alloc);
     s->fT = fftw_alloc_complex (local_alloc);
 
@@ -55,6 +63,7 @@ state* create_state (int    N,
   	s->dt = dt;
   	s->D = D;
 
+    MPI_Barrier(MPI_COMM_WORLD);
   	return s;
 }
 
@@ -69,4 +78,44 @@ void destroy_state (state* s)
         free (s->T);
   	    free (s);
     }
+}
+
+void make_square (state  *s,
+                  double  h)
+{
+    /*
+     * Initialize state is square of height `h`
+     */
+    int I;
+    int N = s->N;
+    for (int i = 0; i < s->local_n0; i++)
+    {
+        for (int j = 0; j < N; j++)
+        {
+            I = i + s->local_0_start;
+            if (j >= N>>2 && j <= 3*(N>>2) && I >= N>>2 && I <= 3*(N>>2))
+                s->T[i*N + j] = h;
+            else s->T[i*N + j] = 0.0;
+        }
+    }
+
+    MPI_Barrier (MPI_COMM_WORLD);
+    return;
+}
+
+void make_const (state  *s,
+                 double  h)
+{
+    /*
+     * Initialize state as constant field of value `h`
+     */
+    printf("Thing: %d\n", s->local_n0);
+    for (int i = 0; i < s->local_n0; ++i)
+    {
+        for (int j = 0; j < s->N; ++j)
+        {
+            s->T[i*(s->N) + j] = h;
+        }
+    }
+    return;
 }
