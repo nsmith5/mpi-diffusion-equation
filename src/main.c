@@ -29,6 +29,8 @@ int main (int argc, char **argv)
     state* s = create_state (20, 0.1, 0.2, 1.0);
     make_square (s, 1.0);
     save_state (s, file_id);
+    step (s);
+    save_state (s, file_id);
 
     destroy_state (s);
 

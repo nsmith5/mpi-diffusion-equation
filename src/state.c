@@ -22,14 +22,6 @@ state* create_state (int    N,
                                          &s->local_n0,
                                          &s->local_0_start);
 
-    int rank;
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    printf("I'm process %d and local_n0 = %d and local_0_start = %d and local allocation is %d\n",
-           rank,
-           s->local_n0,
-           s->local_0_start,
-           local_alloc);
-
     s->T = fftw_alloc_real (2 * local_alloc);
     s->fT = fftw_alloc_complex (local_alloc);
 

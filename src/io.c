@@ -36,7 +36,7 @@ void io_finalize (hid_t file_id)
 void save_state (state* s, hid_t file_id)
 {
     hid_t plist_id;             /* Property list id */
-    hid_t dset_id;              /* dataset id */
+    hid_t dset_id, group_id;    /* dataset id and group id */
     hid_t filespace, memspace;  /* File and memory ids */
     hsize_t dimsf[2];           /* Data dimensions */
     hsize_t count[2];           /* Hyperslab stuff*/
@@ -51,9 +51,20 @@ void save_state (state* s, hid_t file_id)
     filespace = H5Screate_simple(2, dimsf, NULL);
 
     /*
+     * Make Group from simulation time `t`
+     */
+    char groupname[50];
+    sprintf(groupname, "Time = %g", s->t);
+    group_id = H5Gcreate (file_id,
+                          groupname,
+                          H5P_DEFAULT,
+                          H5P_DEFAULT,
+                          H5P_DEFAULT);
+
+    /*
      * Create Dataset
      */
-    dset_id = H5Dcreate(file_id,
+    dset_id = H5Dcreate(group_id,
                         "Temperature",
                         H5T_NATIVE_DOUBLE,
                         filespace,
@@ -86,13 +97,19 @@ void save_state (state* s, hid_t file_id)
     H5Pset_dxpl_mpio(plist_id, H5FD_MPIO_COLLECTIVE);
 
     // Write data!
-    status = H5Dwrite(dset_id, H5T_NATIVE_DOUBLE, memspace, filespace, plist_id, s->T);
+    status = H5Dwrite (dset_id,
+                       H5T_NATIVE_DOUBLE,
+                       memspace,
+                       filespace,
+                       plist_id,
+                       s->T);
 
     // Close a bunch of stuff
-    H5Dclose(dset_id);
-    H5Sclose(filespace);
-    H5Sclose(memspace);
-    H5Pclose(plist_id);
+    H5Gclose (group_id);
+    H5Dclose (dset_id);
+    H5Sclose (filespace);
+    H5Sclose (memspace);
+    H5Pclose (plist_id);
 
     MPI_Barrier (MPI_COMM_WORLD);
 
