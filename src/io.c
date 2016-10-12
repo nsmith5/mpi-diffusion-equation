@@ -77,32 +77,29 @@ void save_state (state* s, hid_t file_id)
      * Each process writes it's chunk of the temperature field to the
      * hyperslab in the file
      */
+    for (int row = 0; row < s->local_n0; row++)
+    {
+      count[0] = 1;         // Only write one row
+      count[1] = s->N;
+      offset[0] = s->local_0_start + row;
+      offset[1] = 0;
+      memspace = H5Screate_simple (2, count, NULL);
 
-    count[0] = s->local_n0;
-    count[1] = s->N;
-    offset[0] = s->local_0_start;
-    offset[1] = 0;
-    memspace = H5Screate_simple(2, count, NULL);
+      filespace = H5Dget_space (dset_id);
+      H5Sselect_hyperslab (filespace, H5S_SELECT_SET, offset, NULL, count, NULL);
 
-    /*
-     * Create your hyperslab
-     */
-    filespace = H5Dget_space (dset_id);
-    H5Sselect_hyperslab(filespace, H5S_SELECT_SET, offset, NULL, count, NULL);
+      plist_id = H5Pcreate (H5P_DATASET_XFER);
+      H5Pset_dxpl_mpio (plist_id, H5FD_MPIO_COLLECTIVE);
 
-    /*
-     * Create property list of collective dataset write.
-     */
-    plist_id = H5Pcreate(H5P_DATASET_XFER);
-    H5Pset_dxpl_mpio(plist_id, H5FD_MPIO_COLLECTIVE);
+      status = H5Dwrite (dset_id,
+                         H5T_NATIVE_DOUBLE,
+                         memspace,
+                         filespace,
+                         plist_id,
+                         s->T + row*2*(s->N/2 + 1));
+    }
 
-    // Write data!
-    status = H5Dwrite (dset_id,
-                       H5T_NATIVE_DOUBLE,
-                       memspace,
-                       filespace,
-                       plist_id,
-                       s->T);
+    MPI_Barrier (MPI_COMM_WORLD);
 
     // Close a bunch of stuff
     H5Gclose (group_id);
@@ -110,8 +107,6 @@ void save_state (state* s, hid_t file_id)
     H5Sclose (filespace);
     H5Sclose (memspace);
     H5Pclose (plist_id);
-
-    MPI_Barrier (MPI_COMM_WORLD);
 
     return;
 }

@@ -1,7 +1,23 @@
 #include <stdlib.h>
+#include <math.h>
 #include <fftw3-mpi.h>
 #include <fftw3.h>
 #include "state.h"
+
+#define PI 2*acos(0)
+
+double k_squared(int    i,
+                 int    j,
+                 int    N,
+                 double dx)
+{
+  // Compute the wavenumber at [i,j] for N x N system
+  double L = N*dx;
+  double kx2 = i < (N>>1) + 1 ? pow (2*PI*i/L, 2) : pow (2*PI*(N-i)/L, 2);
+  double ky2 = j < (N>>1) + 1 ? pow (2*PI*j/L, 2) : pow (2*PI*(N-j)/L, 2);
+
+  return sqrt(kx2 + ky2);
+}
 
 state* create_state (int    N,
                      double dx,
@@ -21,13 +37,24 @@ state* create_state (int    N,
 
     s->T = fftw_alloc_real (2 * local_alloc);
     s->fT = fftw_alloc_complex (local_alloc);
+    s->G = fftw_alloc_real (local_alloc);
 
-    if (s->T == NULL || s->fT == NULL)
+    if (s->T == NULL || s->fT == NULL || s->G == NULL)
     {
         // If allocation failed return null state
         free (s->T);
         free (s->fT);
         return NULL;
+    }
+
+    double kk;
+    for (int i = 0; i < s->local_n0; i++)
+    {
+      for (int j = 0; j < N/2 + 1; j++)
+        {
+          kk = k_squared (i + s->local_0_start, j, N, dx);
+          s->G[i*(N/2+1)+j] = exp(-D*kk*dt);
+        }
     }
 
     // Make Fourier transform plan
@@ -97,3 +124,4 @@ void make_const (state  *s,
     MPI_Barrier (MPI_COMM_WORLD);
     return;
 }
+

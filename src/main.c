@@ -27,36 +27,18 @@ int main (int argc, char **argv)
     init (argc, argv);
     hid_t file_id = io_init ("data/Data.h5");
 
-    state* s = create_state (24, 0.1, 0.01, 1.0);
-    make_const (s, 1.0);
+    int N = 1024;
+    double dx = 0.1;
+    double dt = 0.1;
+    double D = 1.0;
+    state* s = create_state (N, dx, dt, D);
+    make_square (s, 1.0);
 
-	fft (s);
-	ifft (s);
-
-	save_state (s, file_id);
-
-    int rank, size;
-    MPI_Comm_size(MPI_COMM_WORLD, &size);
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-
-    MPI_Barrier(MPI_COMM_WORLD);
-
-    for (int proc = 0; proc < size; proc++)
+    for (int i = 0; i < 100; i++)
     {
-        if (proc == rank)
-        {
-            for (int i = 0; i < s->local_n0; i++)
-            {
-                printf("\n");
-                for (int j = 0; j < 24; j++)
-                {
-                    printf("%g ", s->T[i*26 + j]);
-                }
-            }
-        }
+      step (s);
+      save_state (s, file_id);
     }
-
-    printf("\n");
 
     destroy_state (s);
     io_finalize (file_id);

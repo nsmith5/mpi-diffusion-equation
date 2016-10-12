@@ -3,6 +3,7 @@ typedef struct
 {
 	double* T;			// Temperature field
 	fftw_complex* fT;	// Fourier Transform of the field
+	double *G;			// The propagator
 
   	double t;			// Global time
   	double dt;			// Time step size
