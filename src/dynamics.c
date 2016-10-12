@@ -15,8 +15,8 @@ double k(state *s,
     int N = s->N;
     double L = s->N*s->dx;
 
-    double kx2 = i < N>>1 ? pow (2*PI*i/L, 2) : pow (2*PI*(N-i)/L, 2);
-    double ky2 = j < N>>1 ? pow (2*PI*j/L, 2) : pow (2*PI*(N-j)/L, 2);
+    double kx2 = i < (N>>1) + 1 ? pow (2*PI*i/L, 2) : pow (2*PI*(N-i)/L, 2);
+    double ky2 = j < (N>>1) + 1 ? pow (2*PI*j/L, 2) : pow (2*PI*(N-j)/L, 2);
 
     return sqrt(kx2 + ky2);
 }
@@ -56,4 +56,19 @@ void step(state *s)
     MPI_Barrier(MPI_COMM_WORLD);
 
     return;
+}
+
+void fft (state *s)
+{
+	fftw_mpi_execute_dft_r2c (s->fft_plan, s->T, s->fT);
+	MPI_Barrier (MPI_COMM_WORLD);
+	return;
+}
+
+void ifft (state *s)
+{
+	fftw_mpi_execute_dft_c2r (s->ifft_plan, s->fT, s->T);
+	normalize (s);
+	MPI_Barrier (MPI_COMM_WORLD);
+	return;
 }
