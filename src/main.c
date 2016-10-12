@@ -24,12 +24,15 @@ void finalize (void)
 int main (int argc, char **argv)
 {
     init (argc, argv);
+    hid_t file_id = io_init ("Data.h5");
 
     state* s = create_state (20, 0.1, 0.2, 1.0);
     make_square (s, 1.0);
-    save_state (s, "filename.h5");
+    save_state (s, file_id);
+
     destroy_state (s);
 
+    io_finalize (file_id);
     finalize ();
     return 0;
 }

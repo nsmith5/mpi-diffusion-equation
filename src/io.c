@@ -1,36 +1,47 @@
 #include <mpi.h>
 #include <hdf5.h>
 #include <stdlib.h>
+#include <unistd.h>     // access() to check if file exists
 #include "state.h"
 #include "io.h"
 
-void save_state (state* s, char *filename)
+hid_t io_init (const char *filename)
 {
+    /*
+     *  Create a file to save data to for this session
+     */
+
     MPI_Comm comm = MPI_COMM_WORLD;
     MPI_Info info = MPI_INFO_NULL;
+    hid_t plist_id;     /* Property list id */
+    hid_t file_id;      /* File id */
 
+    plist_id = H5Pcreate (H5P_FILE_ACCESS);
+    H5Pset_fapl_mpio (plist_id, comm, info);
+
+    file_id = H5Fcreate (filename,
+                         H5F_ACC_TRUNC,
+                         H5P_DEFAULT,
+                         plist_id);
+    H5Pclose (plist_id);
+    return file_id;
+}
+
+void io_finalize (hid_t file_id)
+{
+    H5Fclose (file_id);
+    return;
+}
+
+void save_state (state* s, hid_t file_id)
+{
     hid_t plist_id;             /* Property list id */
-    hid_t file_id, dset_id;     /* File and dataset ids */
+    hid_t dset_id;              /* dataset id */
     hid_t filespace, memspace;  /* File and memory ids */
     hsize_t dimsf[2];           /* Data dimensions */
     hsize_t count[2];           /* Hyperslab stuff*/
     hsize_t offset[2];          /* Offset of starting points */
     herr_t status;
-
-    /*
-     * Set up file access property list with parallel I/O access
-     */
-    plist_id = H5Pcreate(H5P_FILE_ACCESS);
-    H5Pset_fapl_mpio(plist_id, comm, info);
-
-    /*
-     * Create a new file
-     */
-    file_id = H5Fcreate(filename,
-                        H5F_ACC_TRUNC,
-                        H5P_DEFAULT,
-                        plist_id);
-    H5Pclose(plist_id);
 
     /*
      * Dataspace specs
@@ -82,7 +93,6 @@ void save_state (state* s, char *filename)
     H5Sclose(filespace);
     H5Sclose(memspace);
     H5Pclose(plist_id);
-    H5Fclose(file_id);
 
     MPI_Barrier (MPI_COMM_WORLD);
 
