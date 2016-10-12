@@ -24,5 +24,6 @@ env:
 	export HDF5_CLINKER=mpicc
 
 clean:
+	rm -f data/Data.h5
 	rm -f obj/*
 	rm -f main

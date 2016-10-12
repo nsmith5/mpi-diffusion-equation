@@ -25,7 +25,7 @@ void normalize (state *s)
 {
     for (int i = 0; i < s->local_n0; i++)
         for (int j = 0; j < s-> N; j++)
-          s->T[i*s->N + j] /= s->N*s->N;
+          s->T[i*2*(s->N/2 + 1) + j] /= s->N*s->N;
     return;
 }
 

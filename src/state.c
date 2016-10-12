@@ -8,19 +8,16 @@ state* create_state (int    N,
                      double dt,
                      double D)
 {
-    ptrdiff_t local_alloc;      // Size of local array allocation
+    // Size of local array allocation
+    ptrdiff_t local_alloc;
 
 	// Try to allocate new state
     state* s = malloc (sizeof (state));
-    if (s == NULL)
-      return NULL;
+    if (s == NULL) return NULL;
 
     // Try to allocate temperature pointers
-    local_alloc = fftw_mpi_local_size_2d(N,
-                                         (N>>1) + 1,
-                                         MPI_COMM_WORLD,
-                                         &s->local_n0,
-                                         &s->local_0_start);
+    local_alloc = fftw_mpi_local_size_2d (N, N/2 + 1, MPI_COMM_WORLD,
+                                          &s->local_n0, &s->local_0_start);
 
     s->T = fftw_alloc_real (2 * local_alloc);
     s->fT = fftw_alloc_complex (local_alloc);
@@ -34,19 +31,11 @@ state* create_state (int    N,
     }
 
     // Make Fourier transform plan
-    s->fft_plan = fftw_mpi_plan_dft_r2c_2d(N,
-                                           N,
-                                           s->T,
-                                           s->fT,
-                                           MPI_COMM_WORLD,
-                                           FFTW_MEASURE);
-
-    s->ifft_plan = fftw_mpi_plan_dft_c2r_2d(N,
-                                            N,
-                                            s->fT,
-                                            s->T,
-                                            MPI_COMM_WORLD,
+    s->fft_plan = fftw_mpi_plan_dft_r2c_2d (N, N, s->T, s->fT, MPI_COMM_WORLD,
                                             FFTW_MEASURE);
+
+    s->ifft_plan = fftw_mpi_plan_dft_c2r_2d (N, N, s->fT, s->T, MPI_COMM_WORLD,
+                                             FFTW_MEASURE);
 
     // Initialize remaining parameters
     s->t = 0.0;
@@ -75,9 +64,7 @@ void destroy_state (state* s)
 void make_square (state  *s,
                   double  h)
 {
-    /*
-     * Initialize state is square of height `h`
-     */
+    // Initialize state is square of height `h`
     int I;
     int N = s->N;
     for (int i = 0; i < s->local_n0; i++)
@@ -86,8 +73,8 @@ void make_square (state  *s,
         {
             I = i + s->local_0_start;
             if (j >= N>>2 && j <= 3*(N>>2) && I >= N>>2 && I <= 3*(N>>2))
-                s->T[i*N + j] = h;
-            else s->T[i*N + j] = 0.0;
+                s->T[i*2*(N/2 + 1) + j] = h;
+            else s->T[i*2*(N/2 + 1) + j] = 0.0;
         }
     }
 
@@ -98,16 +85,15 @@ void make_square (state  *s,
 void make_const (state  *s,
                  double  h)
 {
-    /*
-     * Initialize state as constant field of value `h`
-     */
-    printf("Thing: %d\n", s->local_n0);
+    // Initialize state as constant field of value `h`
     for (int i = 0; i < s->local_n0; ++i)
     {
         for (int j = 0; j < s->N; ++j)
         {
-            s->T[i*(s->N) + j] = h;
+            s->T[i*2*(s->N/2 + 1) + j] = h;
         }
     }
+
+    MPI_Barrier (MPI_COMM_WORLD);
     return;
 }
