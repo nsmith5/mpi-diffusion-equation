@@ -20,6 +20,7 @@ void step(state *s)
     fftw_mpi_execute_dft_r2c(s->fft_plan, s->T, s->fT);
     MPI_Barrier(MPI_COMM_WORLD);
 
+    #pragma omp parallel for
     for (int i = 0; i < s->local_n0; i++)
     {
         for (int j = 0; j < (s->N>>1) + 1; j++)
