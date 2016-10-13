@@ -1,8 +1,8 @@
 CC = h5pcc
-CFLAGS = -I./include -Wall -fopenmp -O3 -std=c99
+CFLAGS = -I./include -Wall -fopenmp
 LIBS = -lfftw3_mpi -lfftw3_omp -lfftw3 -lm
 
-main: obj/state.o obj/main.o obj/io.o obj/dynamics.o
+main: obj/state.o obj/main.o obj/io.o obj/dynamics.o obj/error.o
 	$(CC) obj/* $(CFLAGS) $(LIBS) -o main
 
 obj/main.o: src/main.c
@@ -20,11 +20,7 @@ obj/dynamics.o: src/dynamics.c include/dynamics.h
 obj/error.o: src/error.c include/error.h
 	$(CC) -c src/error.c $(CFLAGS) -o obj/error.o
 
-.PHONY: clean, env
-
-env:
-	export HDF5_CC=mpicc
-	export HDF5_CLINKER=mpicc
+.PHONY: clean
 
 clean:
 	rm -f data/Data.h5

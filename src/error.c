@@ -11,10 +11,12 @@
 
 #include "error.h"
 
-void error (const char* error_string)
+void my_error (const char* error_string)
 {
     int rank;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    printf ("-------------------------------------------------------\n");
     printf ("Error caught on process %d: %s\n", rank, error_string);
+    printf ("-------------------------------------------------------\n");
     MPI_Abort (MPI_COMM_WORLD, 1);
 }

@@ -2,6 +2,8 @@
 #include <hdf5.h>
 #include <stdlib.h>
 #include <unistd.h>     // access() to check if file exists
+
+#include "error.h"
 #include "state.h"
 #include "io.h"
 
@@ -61,9 +63,7 @@ void save_state (state* s, hid_t file_id)
                           H5P_DEFAULT,
                           H5P_DEFAULT);
 
-    /*
-     * Create Dataset
-     */
+    // Create Dataset
     dset_id = H5Dcreate(group_id,
                         "Temperature",
                         H5T_NATIVE_DOUBLE,
@@ -97,6 +97,7 @@ void save_state (state* s, hid_t file_id)
                          filespace,
                          plist_id,
                          s->T + row*2*(s->N/2 + 1));
+      if (status) my_error ("Error on hdf5 write");
     }
 
     MPI_Barrier (MPI_COMM_WORLD);

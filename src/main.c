@@ -5,12 +5,12 @@
 #include <unistd.h>		// access () for checking file existance
 #include <omp.h>
 
+#include "error.h"
 #include "state.h"
 #include "dynamics.h"
 #include "io.h"
 
 int threads_ok;
-int verbose = 1;
 
 void init (int    argc,
            char **argv)
@@ -25,16 +25,18 @@ void init (int    argc,
 
   // Initialize fftw
   fftw_mpi_init ();
-  
+
   // Import wisdom from file and broadcast
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  if (verbose && rank == 0) printf("Initialized environment, loading wisdom\n"); 
+
   if (rank == 0 && access ("data/plans.wisdom", F_OK) != -1)
-  { 
-	fftw_import_wisdom_from_filename ("data/plans.wisdom");
-  	fftw_mpi_broadcast_wisdom (MPI_COMM_WORLD);
+  {
+    int err = fftw_import_wisdom_from_filename ("data/plans.wisdom");
+  	if (err) my_error("Importing FFTW wisdom failed!");
+    fftw_mpi_broadcast_wisdom (MPI_COMM_WORLD);
   }
+  MPI_Barrier (MPI_COMM_WORLD);
   return;
 }
 
@@ -44,8 +46,17 @@ void finalize (void)
   fftw_mpi_gather_wisdom (MPI_COMM_WORLD);
   int rank;
   MPI_Comm_rank (MPI_COMM_WORLD, &rank);
-  if (rank == 0) fftw_export_wisdom_to_filename ("data/plans.wisdom");
-  if (verbose && rank == 0) printf ("Exported wisdom, now cleaning up environmen\n");
+  if (rank == 0)
+  {
+    int err = fftw_export_wisdom_to_filename ("data/plans.wisdom");
+    if (err)
+      {
+        remove ("data/plans.wisdom");
+        my_error ("Failed to correctly export FFTW wisdom");
+      }
+  }
+
+  MPI_Barrier (MPI_COMM_WORLD);
   // Clean up threads, fftw and finalize MPI runtime
   fftw_cleanup_threads ();
   fftw_mpi_cleanup ();
@@ -80,6 +91,7 @@ int main (int argc, char **argv)
 
     destroy_state (s);
     io_finalize (file_id);
+    MPI_Barrier (MPI_COMM_WORLD);
     finalize ();
     return 0;
 }

@@ -8,4 +8,4 @@
  * an error can be thrown by calling error ("<Error string here>");
  */
 
-void error (const char* error_string);
+void my_error (const char* error_string);

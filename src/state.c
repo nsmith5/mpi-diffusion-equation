@@ -44,6 +44,7 @@ state* create_state (int    N,
         // If allocation failed return null state
         free (s->T);
         free (s->fT);
+        free (s->G);
         return NULL;
     }
 
@@ -58,19 +59,12 @@ state* create_state (int    N,
     }
 
     // Make Fourier transform plan
-    
-	if (1)
-	{
-		int rank;
-		MPI_Comm_rank (MPI_COMM_WORLD, &rank);
-		if (rank == 0) printf ("Planning fourier transforms");
-	}	
 
     s->fft_plan = fftw_mpi_plan_dft_r2c_2d (N, N, s->T, s->fT, MPI_COMM_WORLD,
-                                            FFTW_PATIENT);
+                                            FFTW_MEASURE);
 
     s->ifft_plan = fftw_mpi_plan_dft_c2r_2d (N, N, s->fT, s->T, MPI_COMM_WORLD,
-                                             FFTW_PATIENT);
+                                             FFTW_MEASURE);
 
     // Initialize remaining parameters
     s->t = 0.0;
