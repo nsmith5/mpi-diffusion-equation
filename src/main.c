@@ -2,6 +2,7 @@
 #include <hdf5.h>
 #include <fftw3-mpi.h>
 #include <stdio.h>
+#include <unistd.h>		// access () for checking file existance
 #include <omp.h>
 
 #include "state.h"
@@ -9,6 +10,7 @@
 #include "io.h"
 
 int threads_ok;
+int verbose = 1;
 
 void init (int    argc,
            char **argv)
@@ -23,13 +25,16 @@ void init (int    argc,
 
   // Initialize fftw
   fftw_mpi_init ();
-
+  
   // Import wisdom from file and broadcast
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  if (rank == 0) fftw_import_wisdom_from_filename ("data/plans.wisdom");
-  fftw_mpi_broadcast_wisdom (MPI_COMM_WORLD);
-
+  if (verbose && rank == 0) printf("Initialized environment, loading wisdom\n"); 
+  if (rank == 0 && access ("data/plans.wisdom", F_OK) != -1)
+  { 
+	fftw_import_wisdom_from_filename ("data/plans.wisdom");
+  	fftw_mpi_broadcast_wisdom (MPI_COMM_WORLD);
+  }
   return;
 }
 
@@ -40,7 +45,7 @@ void finalize (void)
   int rank;
   MPI_Comm_rank (MPI_COMM_WORLD, &rank);
   if (rank == 0) fftw_export_wisdom_to_filename ("data/plans.wisdom");
-
+  if (verbose && rank == 0) printf ("Exported wisdom, now cleaning up environmen\n");
   // Clean up threads, fftw and finalize MPI runtime
   fftw_cleanup_threads ();
   fftw_mpi_cleanup ();
@@ -53,7 +58,7 @@ int main (int argc, char **argv)
     init (argc, argv);
     hid_t file_id = io_init ("data/Data.h5");
 
-    int N = 4096;
+    int N = 512;
     double dx = 0.1;
     double dt = 0.1;
     double D = 1.0;
@@ -64,11 +69,14 @@ int main (int argc, char **argv)
     for (int i = 0; i < 100; i++)
     {
       step (s);
-      //save_state (s, file_id);
+      save_state (s, file_id);
     }
     double t2 = MPI_Wtime();
 
-    printf("Elapsed time for loop is %f\n", t2-t1);
+	int rank;
+	MPI_Comm_rank (MPI_COMM_WORLD, &rank);
+	if (rank == 0)
+    	printf("Elapsed time for loop is %f\n", t2-t1);
 
     destroy_state (s);
     io_finalize (file_id);
