@@ -59,10 +59,10 @@ state* create_state (int    N,
 
     // Make Fourier transform plan
     s->fft_plan = fftw_mpi_plan_dft_r2c_2d (N, N, s->T, s->fT, MPI_COMM_WORLD,
-                                            FFTW_MEASURE);
+                                            FFTW_PATIENT);
 
     s->ifft_plan = fftw_mpi_plan_dft_c2r_2d (N, N, s->fT, s->T, MPI_COMM_WORLD,
-                                             FFTW_MEASURE);
+                                             FFTW_PATIENT);
 
     // Initialize remaining parameters
     s->t = 0.0;
