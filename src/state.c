@@ -58,6 +58,14 @@ state* create_state (int    N,
     }
 
     // Make Fourier transform plan
+    
+	if (1)
+	{
+		int rank;
+		MPI_Comm_rank (MPI_COMM_WORLD, &rank);
+		if (rank == 0) printf ("Planning fourier transforms");
+	}	
+
     s->fft_plan = fftw_mpi_plan_dft_r2c_2d (N, N, s->T, s->fT, MPI_COMM_WORLD,
                                             FFTW_PATIENT);
 

@@ -1,5 +1,5 @@
 CC = h5pcc
-CFLAGS = -I./include -Wall -fopenmp -O3
+CFLAGS = -I./include -Wall -fopenmp -O3 -std=c99 -xSSE4.2
 LIBS = -lfftw3_mpi -lfftw3_omp -lfftw3 -lm
 
 main: obj/state.o obj/main.o obj/io.o obj/dynamics.o
