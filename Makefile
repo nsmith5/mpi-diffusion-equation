@@ -1,5 +1,5 @@
 CC = h5pcc
-CFLAGS = -I./include -Wall -fopenmp -O3 -std=c99 -xSSE4.2
+CFLAGS = -I./include -Wall -fopenmp -O3 -std=c99
 LIBS = -lfftw3_mpi -lfftw3_omp -lfftw3 -lm
 
 main: obj/state.o obj/main.o obj/io.o obj/dynamics.o
@@ -16,6 +16,9 @@ obj/io.o: src/io.c include/io.h
 
 obj/dynamics.o: src/dynamics.c include/dynamics.h
 	$(CC) -c src/dynamics.c $(CFLAGS) -o obj/dynamics.o
+
+obj/error.o: src/error.c include/error.h
+	$(CC) -c src/error.c $(CFLAGS) -o obj/error.o
 
 .PHONY: clean, env
 
