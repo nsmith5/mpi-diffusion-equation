@@ -11,6 +11,40 @@
 #include "io.h"
 
 int threads_ok;
+void init (int argc, char **argv);
+void finalize (void);
+
+int main (int argc, char **argv)
+{
+    int N = 512;
+    double dx = 0.1;
+    double dt = 0.1;
+    double D = 1.0;
+
+    init (argc, argv);
+    hid_t file_id = io_init ("data/Data.h5");
+    state* s = create_state (N, dx, dt, D);
+    make_square (s, 1.0);
+
+    double t1 = MPI_Wtime();
+    for (int i = 0; i < 100; i++)
+    {
+      step (s);
+      save_state (s, file_id);
+    }
+    double t2 = MPI_Wtime();
+
+	int rank;
+	MPI_Comm_rank (MPI_COMM_WORLD, &rank);
+	if (rank == 0)
+    	printf("Elapsed time for loop is %f\n", t2-t1);
+
+    destroy_state (s);
+    io_finalize (file_id);
+    MPI_Barrier (MPI_COMM_WORLD);
+    finalize ();
+    return 0;
+}
 
 void init (int    argc,
            char **argv)
@@ -62,36 +96,4 @@ void finalize (void)
   fftw_mpi_cleanup ();
   MPI_Finalize ();
   return;
-}
-
-int main (int argc, char **argv)
-{
-    init (argc, argv);
-    hid_t file_id = io_init ("data/Data.h5");
-
-    int N = 512;
-    double dx = 0.1;
-    double dt = 0.1;
-    double D = 1.0;
-    state* s = create_state (N, dx, dt, D);
-    make_square (s, 1.0);
-
-    double t1 = MPI_Wtime();
-    for (int i = 0; i < 100; i++)
-    {
-      step (s);
-      save_state (s, file_id);
-    }
-    double t2 = MPI_Wtime();
-
-	int rank;
-	MPI_Comm_rank (MPI_COMM_WORLD, &rank);
-	if (rank == 0)
-    	printf("Elapsed time for loop is %f\n", t2-t1);
-
-    destroy_state (s);
-    io_finalize (file_id);
-    MPI_Barrier (MPI_COMM_WORLD);
-    finalize ();
-    return 0;
 }
