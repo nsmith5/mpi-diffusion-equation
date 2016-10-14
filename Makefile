@@ -1,6 +1,6 @@
-CC = h5pcc
-CFLAGS = -I./include -Wall -fopenmp
-LIBS = -lfftw3_mpi -lfftw3_omp -lfftw3 -lm
+CC = gcc
+CFLAGS = -I./include -Wall
+LIBS = -lfftw3 -lm -lhdf5
 
 main: obj/state.o obj/main.o obj/io.o obj/dynamics.o obj/error.o
 	$(CC) obj/* $(CFLAGS) $(LIBS) -o main

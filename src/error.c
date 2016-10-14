@@ -6,17 +6,15 @@
  * an error can be thrown by calling error("<Error string here>").
  */
 
-#include <mpi.h>
 #include <stdio.h>
+#include <unistd.h>
 
 #include "error.h"
 
 void my_error (const char* error_string)
 {
-    int rank;
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     printf ("-------------------------------------------------------\n");
-    printf ("Error caught on process %d: %s\n", rank, error_string);
+    printf ("Error caught: %s\n", error_string);
     printf ("-------------------------------------------------------\n");
-    MPI_Abort (MPI_COMM_WORLD, 1);
+    exit (1);
 }
