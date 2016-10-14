@@ -8,7 +8,7 @@ void normalize (state *s)
 {
     for (int i = 0; i < s->N; i++)
         for (int j = 0; j < s->N; j++)
-          s->T[i*2*(s->N/2 + 1) + j] /= s->N*s->N;
+          s->T[i*s->N + j] /= s->N*s->N;
     return;
 }
 
@@ -22,7 +22,7 @@ void step(state *s)
 
     for (int i = 0; i < s->N; i++)
     {
-        for (int j = 0; j < (s->N>>1) + 1; j++)
+        for (int j = 0; j < s->N/2 + 1; j++)
         {
             s->fT[i*(s->N/2 + 1) + j][0] *= s->G[i*(s->N/2 + 1) + j];
             s->fT[i*(s->N/2 + 1) + j][1] *= s->G[i*(s->N/2 + 1) + j];
