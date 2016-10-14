@@ -3,6 +3,7 @@
 #include <fftw3-mpi.h>
 #include <stdio.h>
 #include <unistd.h>		// access () for checking file existance
+#include <stdbool.h>
 #include <omp.h>
 
 #include "error.h"
@@ -10,6 +11,9 @@
 #include "dynamics.h"
 #include "io.h"
 
+#define MSG(x) if (verbose) printf("%s\n", x)
+
+const int verbose = true;
 int threads_ok;
 void init (int argc, char **argv);
 void finalize (void);
@@ -59,6 +63,7 @@ void init (int    argc,
 
   // Initialize fftw
   fftw_mpi_init ();
+  MSG("FFTW Initialized");
 
   // Import wisdom from file and broadcast
   int rank;
@@ -67,9 +72,11 @@ void init (int    argc,
   if (rank == 0 && access ("data/plans.wisdom", F_OK) != -1)
   {
     int err = fftw_import_wisdom_from_filename ("data/plans.wisdom");
-  	if (err) my_error("Importing FFTW wisdom failed!");
-    fftw_mpi_broadcast_wisdom (MPI_COMM_WORLD);
+    if (err == 0) my_error("Importing FFTW wisdom failed!");
+    MSG("FFTW Loaded Wisdom from file");
   }
+  fftw_mpi_broadcast_wisdom (MPI_COMM_WORLD);
+  MSG("FFTW Broadcasted Wisdom");
   MPI_Barrier (MPI_COMM_WORLD);
   return;
 }
@@ -83,7 +90,7 @@ void finalize (void)
   if (rank == 0)
   {
     int err = fftw_export_wisdom_to_filename ("data/plans.wisdom");
-    if (err)
+    if (err == 0)
       {
         remove ("data/plans.wisdom");
         my_error ("Failed to correctly export FFTW wisdom");
