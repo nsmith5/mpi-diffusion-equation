@@ -3,7 +3,6 @@
 #include <fftw3-mpi.h>
 #include <stdio.h>
 #include <unistd.h>		// access () for checking file existance
-#include <stdbool.h>
 #include <omp.h>
 
 #include "error.h"
@@ -11,9 +10,9 @@
 #include "dynamics.h"
 #include "io.h"
 
-#define MSG(x) if (verbose) printf("%s\n", x)
+#define FILENAME "data/Data.h5"
 
-const int verbose = true;
+
 int threads_ok;
 void init (int argc, char **argv);
 void finalize (void);
@@ -24,11 +23,24 @@ int main (int argc, char **argv)
     double dx = 0.1;
     double dt = 0.1;
     double D = 1.0;
+    state *s = create_state (N, dx, dt, D);
+    hid_t file_id = io_init (FILENAME);
 
+    /*
+     * Initialize MPI Runtime and FFTW
+     */
     init (argc, argv);
-    hid_t file_id = io_init ("data/Data.h5");
-    state* s = create_state (N, dx, dt, D);
+
+    /*
+     * Make a square initial condition
+     */
     make_square (s, 1.0);
+
+    /*
+     * - Time Step the state
+     * - Save each time step
+     * - Measure the time for the whole loop
+     */
 
     double t1 = MPI_Wtime();
     for (int i = 0; i < 100; i++)
@@ -38,11 +50,17 @@ int main (int argc, char **argv)
     }
     double t2 = MPI_Wtime();
 
+    /*
+     * Print out the results of the time trial
+     */
 	int rank;
 	MPI_Comm_rank (MPI_COMM_WORLD, &rank);
 	if (rank == 0)
     	printf("Elapsed time for loop is %f\n", t2-t1);
 
+    /*
+     * Do clean up of the system before exiting
+     */
     destroy_state (s);
     io_finalize (file_id);
     MPI_Barrier (MPI_COMM_WORLD);
@@ -63,7 +81,6 @@ void init (int    argc,
 
   // Initialize fftw
   fftw_mpi_init ();
-  MSG("FFTW Initialized");
 
   // Import wisdom from file and broadcast
   int rank;
@@ -73,10 +90,8 @@ void init (int    argc,
   {
     int err = fftw_import_wisdom_from_filename ("data/plans.wisdom");
     if (err == 0) my_error("Importing FFTW wisdom failed!");
-    MSG("FFTW Loaded Wisdom from file");
   }
   fftw_mpi_broadcast_wisdom (MPI_COMM_WORLD);
-  MSG("FFTW Broadcasted Wisdom");
   MPI_Barrier (MPI_COMM_WORLD);
   return;
 }
@@ -98,6 +113,7 @@ void finalize (void)
   }
 
   MPI_Barrier (MPI_COMM_WORLD);
+
   // Clean up threads, fftw and finalize MPI runtime
   fftw_cleanup_threads ();
   fftw_mpi_cleanup ();

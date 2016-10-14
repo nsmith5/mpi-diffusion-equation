@@ -18,7 +18,6 @@
 #include "io.h"
 
 #define FAIL -1
-#define MSG(x) if (io_verbose) printf("%s\n", x)
 
 const int io_verbose = true;
 
@@ -34,8 +33,6 @@ hid_t io_init (const char *filename)
     herr_t err;         /* Error status */
 
     plist_id = H5Pcreate (H5P_FILE_ACCESS);
-    assert (plist_id != FAIL);
-    MSG("File Access granted");
 
     H5Pset_fapl_mpio (plist_id, comm, info);
 
@@ -44,13 +41,7 @@ hid_t io_init (const char *filename)
                          H5P_DEFAULT,
                          plist_id);
 
-    assert (file_id != FAIL);
-    MSG("File created");
-
     err = H5Pclose (plist_id);
-    assert (err != FAIL);
-
-    MSG("HDF5 I/O Initialized");
     return file_id;
 }
 
@@ -61,8 +52,6 @@ void io_finalize (hid_t file_id)
      */
     herr_t err;
     err = H5Fclose (file_id);
-    assert (err != FAIL);
-    MSG("HDF5 I/O Finalized");
     return;
 }
 
@@ -125,16 +114,9 @@ void save_state (state* s, hid_t file_id)
       offset[1] = 0;
 
       memspace = H5Screate_simple (2, count, NULL);
-      assert (memspace != FAIL);
-
       filespace = H5Dget_space (dset_id);
-      assert (filespace != FAIL);
-
       status = H5Sselect_hyperslab (filespace, H5S_SELECT_SET, offset, NULL, count, NULL);
-      assert (status != FAIL);
-
       plist_id = H5Pcreate (H5P_DATASET_XFER);
-      assert (status != FAIL);
 
       H5Pset_dxpl_mpio (plist_id, H5FD_MPIO_COLLECTIVE);
 
@@ -150,17 +132,12 @@ void save_state (state* s, hid_t file_id)
     if (s->local_n0 > 0)
     {
       status = H5Pclose (plist_id);
-      assert (status != FAIL);
       status = H5Sclose (memspace);
-      assert (status != FAIL);
     }
 
     // Close a bunch of stuff
     status = H5Gclose (group_id);
-    assert (status != FAIL);
     status = H5Dclose (dset_id);
-    assert (status != FAIL);
     status = H5Sclose (filespace);
-    assert (status != FAIL);
     return;
 }

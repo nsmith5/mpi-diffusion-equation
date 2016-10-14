@@ -11,12 +11,14 @@ double k_squared(int    i,
                  int    N,
                  double dx)
 {
-  // Compute the wavenumber at [i,j] for N x N system
-  double L = N*dx;
-  double kx2 = i < (N>>1) + 1 ? pow (2*PI*i/L, 2) : pow (2*PI*(N-i)/L, 2);
-  double ky2 = j < (N>>1) + 1 ? pow (2*PI*j/L, 2) : pow (2*PI*(N-j)/L, 2);
+    /*
+     *  Compute the wavenumber at [i,j] for N x N system
+     */
+    double L = N*dx;
+    double kx2 = i < (N>>1) + 1 ? pow (2*PI*i/L, 2) : pow (2*PI*(N-i)/L, 2);
+    double ky2 = j < (N>>1) + 1 ? pow (2*PI*j/L, 2) : pow (2*PI*(N-j)/L, 2);
 
-  return sqrt(kx2 + ky2);
+    return sqrt(kx2 + ky2);
 }
 
 state* create_state (int    N,
@@ -24,14 +26,20 @@ state* create_state (int    N,
                      double dt,
                      double D)
 {
-    // Size of local array allocation
+    /*
+     *  Size of local array allocation
+     */
     ptrdiff_t local_alloc;
 
-	// Try to allocate new state
+	/*
+     *  Try to allocate new state
+     */
     state* s = malloc (sizeof (state));
     if (s == NULL) return NULL;
 
-    // Try to allocate temperature pointers
+    /*
+     *  Try to allocate temperature pointers
+     */
     local_alloc = fftw_mpi_local_size_2d (N, N/2 + 1, MPI_COMM_WORLD,
                                           &s->local_n0, &s->local_0_start);
 
@@ -41,7 +49,7 @@ state* create_state (int    N,
 
     if (s->T == NULL || s->fT == NULL || s->G == NULL)
     {
-        // If allocation failed return null state
+        // Bail if allocation failed return null state
         free (s->T);
         free (s->fT);
         free (s->G);
@@ -58,8 +66,9 @@ state* create_state (int    N,
         }
     }
 
-    // Make Fourier transform plan
-
+    /*
+     *  Make Fourier transform plan
+     */
     s->fft_plan = fftw_mpi_plan_dft_r2c_2d (N, N, s->T, s->fT, MPI_COMM_WORLD,
                                             FFTW_MEASURE);
 

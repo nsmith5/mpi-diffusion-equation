@@ -1,0 +1,9 @@
+NOTE: To convert a dataset to vtk use
+ 
+	>> h5tovtk data.h5:"<path_to_dataset>" 
+
+For example if the dataset is "/Time = 0.1/Temperature" in file Data.h5 then the command would be
+
+	>> h5tovtk Data.h5:"Time = 0.1/Temperature"
+
+This output a file named "Data.vtk" but another name may be specified with the -o option
