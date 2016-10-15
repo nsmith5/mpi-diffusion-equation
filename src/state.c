@@ -62,7 +62,7 @@ state* create_state (int    N,
       for (int j = 0; j < N/2 + 1; j++)
         {
           kk = k_squared (i + s->local_0_start, j, N, dx);
-          s->G[i*(N/2+1)+j] = exp(-D*kk*dt);
+          s->G[i*(N/2+1)+j] = exp(-D*kk*dt)/N/N;
         }
     }
 

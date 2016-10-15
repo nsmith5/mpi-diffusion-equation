@@ -42,6 +42,7 @@ hid_t io_init (const char *filename)
                          plist_id);
 
     err = H5Pclose (plist_id);
+    assert (err != FAIL);
     return file_id;
 }
 
@@ -52,6 +53,7 @@ void io_finalize (hid_t file_id)
      */
     herr_t err;
     err = H5Fclose (file_id);
+    assert (err != FAIL);
     return;
 }
 
