@@ -1,5 +1,6 @@
 #include <hdf5.h>
 #include <fftw3.h>
+#include <omp.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <time.h>
@@ -43,11 +44,11 @@ int main (int argc, char **argv)
      */
 
     clock_gettime (CLOCK_REALTIME, &t_start);
-    for (int i = 0; i < 10; i++)
+    for (int i = 0; i < 100; i++)
     {
       step (s);
-      save_state (s, file_id);
-      printf("Now on step %d\n", i);
+      //save_state (s, file_id);
+      //printf("Now on step %d\n", i);
     }
     clock_gettime (CLOCK_REALTIME, &t_end);
     wtime = (double)(t_end.tv_sec + t_end.tv_nsec*1e-9) -
@@ -70,6 +71,12 @@ int main (int argc, char **argv)
 void init (int    argc,
            char **argv)
 {
+    /*
+     *  FFTW initialize threads
+     */
+    fftw_init_threads ();
+    fftw_plan_with_nthreads (omp_get_max_threads ());
+
     /*
      * Load FFTW Wisdom from file (save planning time)
      */

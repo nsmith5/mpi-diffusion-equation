@@ -1,5 +1,6 @@
 #include <math.h>
 #include <fftw3.h>
+#include <omp.h>
 
 #include "state.h"
 #include "dynamics.h"
@@ -20,12 +21,15 @@ void step(state *s)
      */
     fftw_execute_dft_r2c(s->fft_plan, s->T, s->fT);
 
-    for (int i = 0; i < s->N; i++)
+    int N = s->N;
+
+    #pragma omp parallel for
+    for (int i = 0; i < N; i++)
     {
-        for (int j = 0; j < s->N/2 + 1; j++)
+        for (int j = 0; j < (N>>1) + 1; j++)
         {
-            s->fT[i*(s->N/2 + 1) + j][0] *= s->G[i*(s->N/2 + 1) + j];
-            s->fT[i*(s->N/2 + 1) + j][1] *= s->G[i*(s->N/2 + 1) + j];
+            s->fT[i*((N>>1) + 1) + j][0] *= s->G[i*((N>>1) + 1) + j];
+            s->fT[i*((N>>1) + 1) + j][1] *= s->G[i*((N>>1) + 1) + j];
         }
     }
 

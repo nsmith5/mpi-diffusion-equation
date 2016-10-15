@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <fftw3.h>
+#include <omp.h>
 
 #include "state.h"
 
@@ -61,6 +62,7 @@ state* create_state (int    N,
     /*
      *  Make Fourier transform plan
      */
+    fftw_plan_with_nthreads (omp_get_max_threads ());
     s->fft_plan = fftw_plan_dft_r2c_2d (N, N, s->T, s->fT, FFTW_MEASURE);
     s->ifft_plan = fftw_plan_dft_c2r_2d (N, N, s->fT, s->T, FFTW_MEASURE);
 
