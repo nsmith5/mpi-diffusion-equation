@@ -30,7 +30,6 @@ void step(state *s)
     }
 
     fftw_execute_dft_c2r(s->ifft_plan, s->fT, s->T);
-    normalize(s);
 
     s->t += s->dt;
     return;

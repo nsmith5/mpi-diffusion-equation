@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -I./include -Wall
+CFLAGS = -I./include -Wall -O3
 LIBS = -lfftw3 -lm -lhdf5
 
 main: obj/state.o obj/main.o obj/io.o obj/dynamics.o obj/error.o
