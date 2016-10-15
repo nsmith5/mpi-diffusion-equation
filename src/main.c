@@ -19,17 +19,18 @@ void finalize (void);
 
 int main (int argc, char **argv)
 {
-    int N = 512;
+    int N = 2048;
     double dx = 0.1;
     double dt = 0.1;
     double D = 1.0;
-    state *s = create_state (N, dx, dt, D);
-    hid_t file_id = io_init (FILENAME);
-
+    hid_t file_id;
+    state *s;
     /*
      * Initialize MPI Runtime and FFTW
      */
     init (argc, argv);
+    s = create_state (N, dx, dt, D);
+    file_id = io_init (FILENAME);
 
     /*
      * Make a square initial condition
@@ -46,7 +47,7 @@ int main (int argc, char **argv)
     for (int i = 0; i < 100; i++)
     {
       step (s);
-      save_state (s, file_id);
+      //save_state (s, file_id);
     }
     double t2 = MPI_Wtime();
 
@@ -77,7 +78,6 @@ void init (int    argc,
   if (provided < MPI_THREAD_FUNNELED) MPI_Abort (MPI_COMM_WORLD, 1);
   threads_ok = provided;
   if (threads_ok) threads_ok = fftw_init_threads ();
-  if (threads_ok) fftw_plan_with_nthreads (omp_get_max_threads ());
 
   // Initialize fftw
   fftw_mpi_init ();

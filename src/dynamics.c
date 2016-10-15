@@ -32,7 +32,6 @@ void step(state *s)
     MPI_Barrier (MPI_COMM_WORLD);
 
     fftw_mpi_execute_dft_c2r(s->ifft_plan, s->fT, s->T);
-    normalize(s);
 
     s->t += s->dt;
     MPI_Barrier(MPI_COMM_WORLD);

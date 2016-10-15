@@ -2,9 +2,12 @@
 #include <math.h>
 #include <fftw3-mpi.h>
 #include <fftw3.h>
+#include <omp.h>
 #include "state.h"
 
 #define PI 2*acos(0)
+
+extern int threads_ok;
 
 double k_squared(int    i,
                  int    j,
@@ -62,13 +65,14 @@ state* create_state (int    N,
       for (int j = 0; j < N/2 + 1; j++)
         {
           kk = k_squared (i + s->local_0_start, j, N, dx);
-          s->G[i*(N/2+1)+j] = exp(-D*kk*dt);
+          s->G[i*(N/2+1)+j] = exp(-D*kk*dt)/N/N;
         }
     }
 
     /*
      *  Make Fourier transform plan
      */
+    if (threads_ok) fftw_plan_with_nthreads (omp_get_max_threads ());
     s->fft_plan = fftw_mpi_plan_dft_r2c_2d (N, N, s->T, s->fT, MPI_COMM_WORLD,
                                             FFTW_MEASURE);
 
@@ -116,7 +120,6 @@ void make_square (state  *s,
         }
     }
 
-    MPI_Barrier (MPI_COMM_WORLD);
     return;
 }
 
@@ -132,7 +135,6 @@ void make_const (state  *s,
         }
     }
 
-    MPI_Barrier (MPI_COMM_WORLD);
     return;
 }
 
