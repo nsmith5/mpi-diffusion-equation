@@ -20,7 +20,7 @@ int main (int argc, char **argv)
 {
     struct timespec t_start, t_end;
     double wtime;
-    int N = 2048;
+    int N = 8192;
     double dx = 0.1;
     double dt = 0.1;
     double D = 1.0;
@@ -44,7 +44,7 @@ int main (int argc, char **argv)
      */
 
     clock_gettime (CLOCK_REALTIME, &t_start);
-    for (int i = 0; i < 100; i++)
+    for (int i = 0; i < 10; i++)
     {
       step (s);
       //save_state (s, file_id);
