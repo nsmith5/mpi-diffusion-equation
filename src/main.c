@@ -29,6 +29,7 @@ int main (int argc, char **argv)
     init (argc, argv);
     s = create_state (N, dx, dt, D);
     file_id = io_init (FILENAME);
+
     /*
      * Make a square initial condition
      */
@@ -43,8 +44,8 @@ int main (int argc, char **argv)
     double t1 = MPI_Wtime();
     for (int i = 0; i < 10; i++)
     {
-      step (s);
-      //save_state (s, file_id);
+        step (s);
+        save_state (s, file_id);
     }
     double t2 = MPI_Wtime();
 

@@ -75,7 +75,7 @@ state* create_state (int    N,
                                             FFTW_MEASURE | FFTW_MPI_TRANSPOSED_OUT);
 
     s->ifft_plan = fftw_mpi_plan_dft_c2r_2d (N, N, s->fT, s->T, MPI_COMM_WORLD,
-                                             FFTW_MEASURE | FFTW_MPI_TRANSPOSED_OUT);
+                                             FFTW_MEASURE | FFTW_MPI_TRANSPOSED_IN);
 
     // Initialize remaining parameters
     s->t = 0.0;

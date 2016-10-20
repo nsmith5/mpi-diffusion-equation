@@ -24,5 +24,6 @@ obj/error.o: src/error.c include/error.h
 
 clean:
 	rm -f data/Data.h5
+	rm -f data/plans.wisdom
 	rm -f obj/*
 	rm -f main
