@@ -20,12 +20,12 @@ void step(state *s)
     fftw_mpi_execute_dft_r2c(s->fft_plan, s->T, s->fT);
     MPI_Barrier(MPI_COMM_WORLD);
 
-    for (int i = 0; i < s->local_n0; i++)
+    for (int i = 0; i < s->local_n1; i++)
     {
-        for (int j = 0; j < (s->N>>1) + 1; j++)
+        for (int j = 0; j < s->N; j++)
         {
-            s->fT[i*(s->N/2 + 1) + j][0] *= s->G[i*(s->N/2 + 1) + j];
-            s->fT[i*(s->N/2 + 1) + j][1] *= s->G[i*(s->N/2 + 1) + j];
+            s->fT[i*s->N + j][0] *= s->G[i*s->N + j];
+            s->fT[i*s->N + j][1] *= s->G[i*s->N + j];
         }
     }
 

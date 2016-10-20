@@ -40,8 +40,10 @@ state* create_state (int    N,
     /*
      *  Try to allocate temperature pointers
      */
-    local_alloc = fftw_mpi_local_size_2d (N, N/2 + 1, MPI_COMM_WORLD,
-                                          &s->local_n0, &s->local_0_start);
+    local_alloc =
+        fftw_mpi_local_size_2d_transposed (N, N/2 + 1, MPI_COMM_WORLD,
+                                           &s->local_n0, &s->local_0_start,
+                                           &s->local_n1, &s->local_1_start);
 
     s->T = fftw_alloc_real (2 * local_alloc);
     s->fT = fftw_alloc_complex (local_alloc);
@@ -57,12 +59,12 @@ state* create_state (int    N,
     }
 
     double kk;
-    for (int i = 0; i < s->local_n0; i++)
+    for (int i = 0; i < s->local_n1; i++)
     {
-      for (int j = 0; j < N/2 + 1; j++)
+      for (int j = 0; j < N; j++)
         {
-          kk = k_squared (i + s->local_0_start, j, N, dx);
-          s->G[i*(N/2+1)+j] = exp(-D*kk*dt)/N/N;
+          kk = k_squared (i + s->local_1_start, j, N, dx);
+          s->G[i*N+j] = exp(-D*kk*dt)/N/N;
         }
     }
 
@@ -70,10 +72,10 @@ state* create_state (int    N,
      *  Make Fourier transform plan
      */
     s->fft_plan = fftw_mpi_plan_dft_r2c_2d (N, N, s->T, s->fT, MPI_COMM_WORLD,
-                                            FFTW_MEASURE);
+                                            FFTW_MEASURE | FFTW_MPI_TRANSPOSED_OUT);
 
     s->ifft_plan = fftw_mpi_plan_dft_c2r_2d (N, N, s->fT, s->T, MPI_COMM_WORLD,
-                                             FFTW_MEASURE);
+                                             FFTW_MEASURE | FFTW_MPI_TRANSPOSED_OUT);
 
     // Initialize remaining parameters
     s->t = 0.0;

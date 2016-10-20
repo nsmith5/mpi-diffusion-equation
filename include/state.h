@@ -11,8 +11,10 @@ typedef struct
   	double D;			// Diffusion constant
 
   	ptrdiff_t N;				// N x N grid
-	ptrdiff_t local_n0;			// local end point
-  	ptrdiff_t local_0_start;	// local start point
+	ptrdiff_t local_n0;			// local end row
+  	ptrdiff_t local_0_start;	// local start row
+	ptrdiff_t local_n1;			// local end row in transpose space
+	ptrdiff_t local_1_start;	// local start row in tranpose space
 
   	fftw_plan fft_plan;		// Fourier transform plan
 	fftw_plan ifft_plan;	// Inverse Fourier transform plan
