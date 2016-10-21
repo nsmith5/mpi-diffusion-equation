@@ -45,7 +45,7 @@ int main (int argc, char **argv)
     for (int i = 0; i < 10; i++)
     {
         step (s);
-        save_state (s, file_id);
+        //save_state (s, file_id);
     }
     double t2 = MPI_Wtime();
 
