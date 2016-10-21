@@ -58,7 +58,7 @@ int main (int argc, char **argv)
     init (argc, argv);
     hid_t file_id = io_init ("data/Data.h5");
 
-    int N = 512;
+    int N = 4096;
     double dx = 0.1;
     double dt = 0.1;
     double D = 1.0;
@@ -66,10 +66,10 @@ int main (int argc, char **argv)
     make_square (s, 1.0);
 
     double t1 = MPI_Wtime();
-    for (int i = 0; i < 100; i++)
+    for (int i = 0; i < 10; i++)
     {
       step (s);
-      save_state (s, file_id);
+      //save_state (s, file_id);
     }
     double t2 = MPI_Wtime();
 

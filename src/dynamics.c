@@ -18,7 +18,6 @@ void step(state *s)
      * Time step the state forward by dt
      */
     fftw_mpi_execute_dft_r2c(s->fft_plan, s->T, s->fT);
-    MPI_Barrier(MPI_COMM_WORLD);
 
     #pragma omp parallel for
     for (int i = 0; i < s->local_n0; i++)
@@ -29,14 +28,9 @@ void step(state *s)
             s->fT[i*(s->N/2 + 1) + j][1] *= s->G[i*(s->N/2 + 1) + j];
         }
     }
-    MPI_Barrier (MPI_COMM_WORLD);
 
     fftw_mpi_execute_dft_c2r(s->ifft_plan, s->fT, s->T);
-    normalize(s);
-
     s->t += s->dt;
-    MPI_Barrier(MPI_COMM_WORLD);
-
     return;
 }
 
