@@ -16,7 +16,7 @@ void finalize (void);
 
 int main (int argc, char **argv)
 {
-    int N = 1024;
+    int N = 4096;
     double dx = 0.1;
     double dt = 0.1;
     double D = 1.0;
