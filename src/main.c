@@ -39,15 +39,17 @@ int main (int argc, char **argv)
      * - Save each time step
      * - Measure the time for the whole loop
      */
-
+	
+	MPI_Barrier (MPI_COMM_WORLD);
     double t1 = MPI_Wtime();
     for (int i = 0; i < 10; i++)
     {
       step (s);
       //save_state (s, file_id);
     }
-    double t2 = MPI_Wtime();
 
+	MPI_Barrier (MPI_COMM_WORLD);
+    double t2 = MPI_Wtime();
     /*
      * Print out the results of the time trial
      */

@@ -18,7 +18,6 @@ void step(state *s)
      * Time step the state forward by dt
      */
     fftw_mpi_execute_dft_r2c(s->fft_plan, s->T, s->fT);
-    MPI_Barrier(MPI_COMM_WORLD);
 
     for (int i = 0; i < s->local_n0; i++)
     {
@@ -29,13 +28,9 @@ void step(state *s)
         }
     }
 
-    MPI_Barrier (MPI_COMM_WORLD);
-
     fftw_mpi_execute_dft_c2r(s->ifft_plan, s->fT, s->T);
 
     s->t += s->dt;
-    MPI_Barrier(MPI_COMM_WORLD);
-
     return;
 }
 
