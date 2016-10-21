@@ -41,7 +41,8 @@ int main (int argc, char **argv)
      */
 	
 	MPI_Barrier (MPI_COMM_WORLD);
-    double t1 = MPI_Wtime();
+    
+	double t1 = MPI_Wtime();
     for (int i = 0; i < 10; i++)
     {
       step (s);
