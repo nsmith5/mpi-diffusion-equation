@@ -5,51 +5,51 @@
 
 void normalize (state *s)
 {
-    for (int i = 0; i < s->local_n0; i++)
-        for (int j = 0; j < s-> N; j++)
-          s->T[i*2*(s->N/2 + 1) + j] /= s->N*s->N;
-    return;
+        // Normalize the temperature field, FFTW's fft generate a factor of
+        // Nx*Ny that needs to scaled out afterwards.
+        int ij;
+        for (int i = 0; i < s->local_n0; i++)
+                for (int j = 0; j < s->N; j++)
+                {
+                        ij = i*2*((s->N>>1) + 1) + j;
+                        s->T[ij] /= s->N*s->N;
+                }
+
+        return;
 }
 
 
 void step(state *s)
 {
-    /*
-     * Time step the state forward by dt
-     */
-    fftw_mpi_execute_dft_r2c(s->fft_plan, s->T, s->fT);
-    MPI_Barrier(MPI_COMM_WORLD);
+        //Time step the state forward by dt
+        int ij;
+        fftw_mpi_execute_dft_r2c(s->fft_plan, s->T, s->fT);
 
-    #pragma omp parallel for
-    for (int i = 0; i < s->local_n0; i++)
-    {
-        for (int j = 0; j < (s->N>>1) + 1; j++)
+        #pragma omp parallel for
+        for (int i = 0; i < s->local_n0; i++)
         {
-            s->fT[i*(s->N/2 + 1) + j][0] *= s->G[i*(s->N/2 + 1) + j];
-            s->fT[i*(s->N/2 + 1) + j][1] *= s->G[i*(s->N/2 + 1) + j];
+                for (int j = 0; j < (s->N>>1) + 1; j++)
+                {
+                        ij = i*((s->N >> 1) + 1) + j;
+                        s->fT[ij][0] *= s->G[ij];
+                        s->fT[ij][1] *= s->G[ij];
+                }
         }
-    }
-    MPI_Barrier (MPI_COMM_WORLD);
 
-    fftw_mpi_execute_dft_c2r(s->ifft_plan, s->fT, s->T);
-
-    s->t += s->dt;
-    MPI_Barrier(MPI_COMM_WORLD);
-
-    return;
+        fftw_mpi_execute_dft_c2r(s->ifft_plan, s->fT, s->T);
+        s->t += s->dt;
+        return;
 }
 
 void fft (state *s)
 {
-	fftw_mpi_execute_dft_r2c (s->fft_plan, s->T, s->fT);
-	MPI_Barrier (MPI_COMM_WORLD);
-	return;
+        fftw_mpi_execute_dft_r2c (s->fft_plan, s->T, s->fT);
+        return;
 }
 
 void ifft (state *s)
 {
-	fftw_mpi_execute_dft_c2r (s->ifft_plan, s->fT, s->T);
-	normalize (s);
-	MPI_Barrier (MPI_COMM_WORLD);
-	return;
+        fftw_mpi_execute_dft_c2r (s->ifft_plan, s->fT, s->T);
+        normalize (s);
+        return;
 }
