@@ -19,7 +19,7 @@ int main (int argc, char **argv)
 {
     struct timespec t_start, t_end;
     double wtime;
-    int N = 8192;
+    int N = 4096;
     double dx = 0.1;
     double dt = 0.1;
     double D = 1.0;
