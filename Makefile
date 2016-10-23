@@ -1,12 +1,12 @@
 CC = gcc
-CFLAGS = -I./include -Wall -O3 -fopenmp
-LIBS = -lfftw3 -lfftw3_omp -lm -lhdf5
+CFLAGS = -I./include -Wall -O3 -std=c99 -fopenmp
+LIBS = -lfftw3 -lfftw3_omp -lm -lhdf5 -lrt
 
 main: obj/state.o obj/main.o obj/io.o obj/dynamics.o obj/error.o
-	$(CC) obj/* $(CFLAGS) $(LIBS) -o main
+	$(CC) obj/* $(CFLAGS) -o main $(LIBS) 
 
 obj/main.o: src/main.c
-	$(CC) -c src/main.c $(CFLAGS) -o obj/main.o
+	$(CC) -c src/main.c $(CFLAGS) -o obj/main.o $(LIBS)
 
 obj/state.o: src/state.c include/state.h
 	$(CC) -c src/state.c $(CFLAGS) -o obj/state.o
