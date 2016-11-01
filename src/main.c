@@ -16,7 +16,7 @@ void finalize (void);
 
 int main (int argc, char **argv)
 {
-    int N = 4096;
+    int N = 24;
     double dx = 0.1;
     double dt = 0.1;
     double D = 1.0;
@@ -45,7 +45,7 @@ int main (int argc, char **argv)
     for (int i = 0; i < 10; i++)
     {
       step (s);
-      //save_state (s, file_id);
+      save_state (s, file_id);
     }
 
 	MPI_Barrier (MPI_COMM_WORLD);

@@ -57,89 +57,132 @@ void io_finalize (hid_t file_id)
     return;
 }
 
-void save_state (state* s, hid_t file_id)
+herr_t save_state (state* s, hid_t file_id)
 {
-    /*
-     *  Save state data to file
-     */
-    hid_t plist_id;             /* Property list id */
-    hid_t dset_id, group_id;    /* dataset id and group id */
-    hid_t filespace, memspace;  /* File and memory ids */
-    hsize_t dimsf[2];           /* Data dimensions */
-    hsize_t count[2];           /* Hyperslab stuff*/
-    hsize_t offset[2];          /* Offset of starting points */
+    hid_t group_id;
     herr_t status;
 
-    /*
-     * Dataspace specs
-     *
-     *  - space is [N x N] double precision
-     */
-    dimsf[0] = s->N;
-    dimsf[1] = s->N;
-    filespace = H5Screate_simple(2, dimsf, NULL);
-    assert (filespace != FAIL);
-
-    /*
-     * Make Group from simulation time `t`
-     */
+    /* Make Group from simulation time `t` */
     char groupname[50];
-    sprintf(groupname, "Time = %g", s->t);
+    sprintf(groupname, "%d", s->step);
     group_id = H5Gcreate (file_id,
                           groupname,
                           H5P_DEFAULT,
                           H5P_DEFAULT,
                           H5P_DEFAULT);
-    assert (group_id != FAIL);
 
-    // Create Dataset
+    /* Write state attributes */
+    status = write_double_attribute ("Time", group_id, &s->t);
+    status = write_double_attribute ("D", group_id, &s->D);
+    status = write_double_attribute ("dx", group_id, &s->dx);
+    status = write_double_attribute ("dt", group_id, &s->dt);
+    status = write_int_attribute ("Step Number", group_id, &s->step);
+    status = write_array_dataset ("Temperature", group_id, s->T, s);
+
+    status = H5Gclose (group_id);
+    return status;
+}
+
+herr_t write_array_dataset (const char *name,
+                            hid_t       group_id,
+                            double     *arr,
+                            state      *s)
+{
+    hid_t dset_id, dataspace;
+    hid_t memspace, plist_id;
+    herr_t status;
+    hsize_t size[2], count[2], offset[2];
+
+    /* Describe the shape of the array */
+    size[0] = s->N;
+    size[1] = s->N;
+    dataspace = H5Screate_simple(2, size, NULL);
+
+
+     /* Create Dataset */
     dset_id = H5Dcreate(group_id,
-                        "Temperature",
+                        name,
                         H5T_NATIVE_DOUBLE,
-                        filespace,
+                        dataspace,
                         H5P_DEFAULT,
                         H5P_DEFAULT,
                         H5P_DEFAULT);
-    assert (dset_id != FAIL);
-    status = H5Sclose (filespace);
-    assert (status != FAIL);
 
-    /*
-     * Each process writes it's chunk of the temperature field to the
-     * hyperslab in the file
-     */
+    /* Describe memory shape, property list and data shape */
+    count[0] = 1;
+    count[1] = s->N;
+    offset[1] = 0;
+    memspace = H5Screate_simple (2, count, NULL);
+
+    /* Set up some of the MPI things */
+    dataspace = H5Dget_space (dset_id);
+    plist_id = H5Pcreate (H5P_DATASET_XFER);
+    H5Pset_dxpl_mpio (plist_id, H5FD_MPIO_COLLECTIVE);
+
+    /* Write data row by row in slabs */
     for (int row = 0; row < s->local_n0; row++)
     {
-        count[0] = 1;         // Only write one row
-        count[1] = s->N;
         offset[0] = s->local_0_start + row;
-        offset[1] = 0;
 
-        memspace = H5Screate_simple (2, count, NULL);
-        filespace = H5Dget_space (dset_id);
-        status = H5Sselect_hyperslab (filespace, H5S_SELECT_SET, offset, NULL, count, NULL);
-        plist_id = H5Pcreate (H5P_DATASET_XFER);
-
-        H5Pset_dxpl_mpio (plist_id, H5FD_MPIO_COLLECTIVE);
+        status = H5Sselect_hyperslab (dataspace,
+                                      H5S_SELECT_SET,
+                                      offset,
+                                      NULL,
+                                      count,
+                                      NULL);
 
         status = H5Dwrite (dset_id,
-                         H5T_NATIVE_DOUBLE,
-                         memspace,
-                         filespace,
-                         plist_id,
-                         s->T + row*2*(s->N/2 + 1));
-        if (status == FAIL) my_error ("Error on hdf5 write");
+                           H5T_NATIVE_DOUBLE,
+                           memspace,
+                           dataspace,
+                           plist_id,
+                           arr + row*2*(s->N/2 + 1));
     }
 
-    if (s->local_n0 > 0)
-    {
-        status = H5Pclose (plist_id);
-        status = H5Sclose (memspace);
-    }
-
-    // Close a bunch of stuff
-    status = H5Gclose (group_id);
+    /* Close everything you opened */
+    status = H5Pclose (plist_id);
+    status = H5Sclose (memspace);
     status = H5Dclose (dset_id);
-    status = H5Sclose (filespace);
-    return;
+    status = H5Sclose (dataspace);
+
+    return status;
+}
+
+
+herr_t write_double_attribute (const char *name,
+                               hid_t group_id,
+                               double *value)
+{
+    hsize_t size = 1;
+    herr_t status;
+    hid_t attr_id, dataspace;
+    dataspace = H5Screate_simple(1, &size, NULL);
+    attr_id = H5Acreate2 (group_id,
+                          name,
+                          H5T_NATIVE_DOUBLE,
+                          dataspace,
+                          H5P_DEFAULT,
+                          H5P_DEFAULT);
+    status = H5Awrite (attr_id, H5T_NATIVE_DOUBLE, value);
+    status = H5Aclose (attr_id);
+    return status;
+}
+
+herr_t write_int_attribute (const char *name,
+                            hid_t       group_id,
+                            int        *value)
+{
+    hsize_t size = 1;
+    herr_t status;
+    hid_t attr_id, dataspace;
+    dataspace = H5Screate_simple (1, &size, NULL);
+    attr_id = H5Acreate2 (group_id,
+                          name,
+                          H5T_NATIVE_INT,
+                          dataspace,
+                          H5P_DEFAULT,
+                          H5P_DEFAULT);
+    status = H5Awrite (attr_id, H5T_NATIVE_INT, value);
+    status = H5Aclose (attr_id);
+    return status;
 }

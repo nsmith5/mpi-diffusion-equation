@@ -25,7 +25,7 @@ void step(state *s)
      * Time step the state forward by dt
      */
     fftw_mpi_execute_dft_r2c(s->fft_plan, s->T, s->fT);
-
+    int ij;
     for (int i = 0; i < s->local_n0; i++)
     {
         for (int j = 0; j < (s->N>>1) + 1; j++)
@@ -39,6 +39,7 @@ void step(state *s)
     fftw_mpi_execute_dft_c2r(s->ifft_plan, s->fT, s->T);
 
     s->t += s->dt;
+    s->step += 1;
     return;
 }
 

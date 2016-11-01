@@ -1,4 +1,5 @@
 #include <fftw3.h>
+
 typedef struct
 {
 	double* T;			// Temperature field
@@ -6,6 +7,7 @@ typedef struct
 	double *G;			// The propagator
 
   	double t;			// Global time
+	int step;			// Global step number
   	double dt;			// Time step size
   	double dx;			// Grid spacing (square)
   	double D;			// Diffusion constant
