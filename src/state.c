@@ -2,7 +2,6 @@
 #include <math.h>
 #include <fftw3-mpi.h>
 #include <fftw3.h>
-#include <omp.h>
 #include "state.h"
 
 #define PI 2*acos(0)
@@ -62,17 +61,16 @@ state* create_state (int N,
         double kk;
         for (int i = 0; i < s->local_n0; i++)
         {
-                for (int j = 0; j < N/2 + 1; j++)
-                {
-                        kk = k_squared (i + s->local_0_start, j, N, dx);
-                        s->G[i*(N/2+1)+j] = exp(-D*kk*dt)/N/N;
-                }
+            for (int j = 0; j < N/2 + 1; j++)
+            {
+                kk = k_squared (i + s->local_0_start, j, N, dx);
+                s->G[i*(N/2+1)+j] = exp(-D*kk*dt)/N/N;
+            }
         }
 
         /*
          *  Make Fourier transform plan
          */
-        if (threads_ok) fftw_plan_with_nthreads (omp_get_max_threads ());
         s->fft_plan = fftw_mpi_plan_dft_r2c_2d (N, N, s->T, s->fT, MPI_COMM_WORLD,
                                                 FFTW_MEASURE);
 
